@@ -16,7 +16,7 @@
 	throw_speed = 3
 	throw_range = 5
 	materials = list(MAT_METAL=500)
-	origin_tech = "materials=1"
+	origin_tech = "engineering=3;combat=3"
 	breakouttime = 600 //Deciseconds = 60s = 1 minute
 	var/cuffsound = 'sound/weapons/handcuffs.ogg'
 	var/trashtype = null //for disposable cuffs
@@ -85,6 +85,7 @@
 	icon_state = "cuff_red"
 	item_state = "coil_red"
 	materials = list(MAT_METAL=150, MAT_GLASS=75)
+	origin_tech = "engineering=2"
 	breakouttime = 300 //Deciseconds = 30s
 	cuffsound = 'sound/weapons/cablecuff.ogg'
 	var/datum/robot_energy_storage/wirestorage = null
@@ -151,6 +152,37 @@
 	desc = "Fake handcuffs meant for erotic roleplay."
 	icon_state = "handcuffGag"
 
+/obj/item/weapon/restraints/handcuffs/cable/attackby(obj/item/I, mob/user, params)
+	..()
+	if(istype(I, /obj/item/stack/rods))
+		var/obj/item/stack/rods/R = I
+		if (R.use(1))
+			var/obj/item/weapon/wirerod/W = new /obj/item/weapon/wirerod
+			if(!remove_item_from_storage(user))
+				user.unEquip(src)
+			user.put_in_hands(W)
+			user << "<span class='notice'>You wrap the cable restraint around the top of the rod.</span>"
+			qdel(src)
+		else
+			user << "<span class='warning'>You need one rod to make a wired rod!</span>"
+			return
+	else if(istype(I, /obj/item/stack/sheet/metal))
+		var/obj/item/stack/sheet/metal/M = I
+		if(M.amount < 6)
+			user << "<span class='warning'>You need at least six metal sheets to make good enough weights!</span>"
+			return
+		user << "<span class='notice'>You begin to apply [I] to [src]...</span>"
+		if(do_after(user, 35, target = src))
+			var/obj/item/weapon/restraints/legcuffs/bola/S = new /obj/item/weapon/restraints/legcuffs/bola
+			M.use(6)
+			user.put_in_hands(S)
+			user << "<span class='notice'>You make some weights out of [I] and tie them to [src].</span>"
+			if(!remove_item_from_storage(user))
+				user.unEquip(src)
+			qdel(src)
+	else
+		return ..()
+
 /obj/item/weapon/restraints/handcuffs/cable/zipties/cyborg/attack(mob/living/carbon/C, mob/user)
 	if(isrobot(user))
 		if(!C.handcuffed)
@@ -194,7 +226,7 @@
 	flags = CONDUCT
 	throwforce = 0
 	w_class = 3
-	origin_tech = "materials=1"
+	origin_tech = "engineering=3;combat=3"
 	slowdown = 7
 	breakouttime = 300	//Deciseconds = 30s = 0.5 minute
 
@@ -204,6 +236,7 @@
 	throw_range = 1
 	icon_state = "beartrap"
 	desc = "A trap used to catch bears and other legged creatures."
+	origin_tech = "engineering=4"
 	var/armed = 0
 	var/trap_damage = 20
 
@@ -283,6 +316,7 @@
 	icon_state = "bola"
 	breakouttime = 35//easy to apply, easy to break out of
 	gender = NEUTER
+	origin_tech = "engineering=3;combat=1"
 	var/weaken = 0
 
 /obj/item/weapon/restraints/legcuffs/bola/throw_impact(atom/hit_atom)
@@ -303,4 +337,5 @@
 	desc = "A strong bola, made with a long steel chain. It looks heavy, enough so that it could trip somebody."
 	icon_state = "bola_r"
 	breakouttime = 70
+	origin_tech = "engineering=4;combat=3"
 	weaken = 1

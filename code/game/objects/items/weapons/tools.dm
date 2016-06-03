@@ -46,7 +46,7 @@
 	icon_state = "wrench_medical"
 	force = 2 //MEDICAL
 	throwforce = 4
-	origin_tech = "materials=1;engineering=1;biotech=1"
+	origin_tech = "materials=1;engineering=1;biotech=3"
 	attack_verb = list("wrenched", "medicaled", "tapped", "jabbed")
 
 /obj/item/weapon/wrench/medical/suicide_act(mob/user)
@@ -200,8 +200,9 @@
 	w_class = 2
 
 	materials = list(MAT_METAL=70, MAT_GLASS=30)
-	origin_tech = "engineering=1"
+	origin_tech = "engineering=1;plasmatech=1"
 	var/welding = 0 	//Whether or not the welding tool is off(0), on(1) or currently welding(2)
+	var/status = 1 		//Whether the welder is secured or unsecured (able to attach rods to it to make a flamethrower)
 	var/max_fuel = 20 	//The max amount of fuel the welder can hold
 	var/change_icons = 1
 	var/can_off_process = 0
@@ -242,6 +243,16 @@
 /obj/item/weapon/weldingtool/suicide_act(mob/user)
 	user.visible_message("<span class='suicide'>[user] welds \his every orifice closed! It looks like \he's trying to commit suicide..</span>")
 	return (FIRELOSS)
+
+
+/obj/item/weapon/weldingtool/attackby(obj/item/I, mob/user, params)
+	if(istype(I, /obj/item/weapon/screwdriver))
+		flamethrower_screwdriver(I, user)
+	else if(istype(I, /obj/item/stack/rods))
+		flamethrower_rods(I, user)
+	else
+		return ..()
+
 
 /obj/item/weapon/weldingtool/attack(mob/living/carbon/human/H, mob/user)
 	if(!istype(H))
@@ -356,6 +367,9 @@
 
 //Toggles the welder off and on
 /obj/item/weapon/weldingtool/proc/toggle(mob/user, message = 0)
+	if(!status)
+		user << "<span class='warning'>[src] can't be turned on while unsecured!</span>"
+		return
 	welding = !welding
 	if(welding)
 		if(get_fuel() >= 1)
@@ -381,13 +395,40 @@
 /obj/item/weapon/weldingtool/is_hot()
 	return welding * heat
 
+/obj/item/weapon/weldingtool/proc/flamethrower_screwdriver(obj/item/I, mob/user)
+	if(welding)
+		user << "<span class='warning'>Turn it off first!</span>"
+		return
+	status = !status
+	if(status)
+		user << "<span class='notice'>You resecure [src].</span>"
+	else
+		user << "<span class='notice'>[src] can now be attached and modified.</span>"
+	add_fingerprint(user)
+
+/obj/item/weapon/weldingtool/proc/flamethrower_rods(obj/item/I, mob/user)
+	if(!status)
+		var/obj/item/stack/rods/R = I
+		if (R.use(1))
+			var/obj/item/weapon/flamethrower/F = new /obj/item/weapon/flamethrower(user.loc)
+			if(!remove_item_from_storage(F))
+				user.unEquip(src)
+				loc = F
+			F.weldtool = src
+			add_fingerprint(user)
+			user << "<span class='notice'>You add a rod to a welder, starting to build a flamethrower.</span>"
+			user.put_in_hands(F)
+		else
+			user << "<span class='warning'>You need one rod to start building a flamethrower!</span>"
+			return
+
 /obj/item/weapon/weldingtool/largetank
 	name = "industrial welding tool"
 	desc = "A slightly larger welder with a larger tank."
 	icon_state = "indwelder"
 	max_fuel = 40
 	materials = list(MAT_GLASS=60)
-	origin_tech = "engineering=2"
+	origin_tech = "engineering=2;plasmatech=2"
 
 /obj/item/weapon/weldingtool/largetank/cyborg
 	name = "integrated welding tool"
@@ -395,6 +436,10 @@
 	icon = 'icons/obj/items_cyborg.dmi'
 	icon_state = "indwelder"
 	toolspeed = 2
+
+/obj/item/weapon/weldingtool/largetank/flamethrower_screwdriver()
+	return
+
 
 /obj/item/weapon/weldingtool/mini
 	name = "emergency welding tool"
@@ -405,6 +450,10 @@
 	materials = list(MAT_METAL=30, MAT_GLASS=10)
 	change_icons = 0
 
+/obj/item/weapon/weldingtool/mini/flamethrower_screwdriver()
+	return
+
+
 /obj/item/weapon/weldingtool/hugetank
 	name = "upgraded industrial welding tool"
 	desc = "An upgraded welder based of the industrial welder."
@@ -412,7 +461,7 @@
 	item_state = "upindwelder"
 	max_fuel = 80
 	materials = list(MAT_METAL=70, MAT_GLASS=120)
-	origin_tech = "engineering=3"
+	origin_tech = "engineering=3;plasmatech=2"
 
 /obj/item/weapon/weldingtool/experimental
 	name = "experimental welding tool"
@@ -421,7 +470,7 @@
 	item_state = "exwelder"
 	max_fuel = 40
 	materials = list(MAT_METAL=70, MAT_GLASS=120)
-	origin_tech = "materials=4;engineering=4;bluespace=3;plasmatech=3"
+	origin_tech = "materials=4;engineering=4;bluespace=3;plasmatech=4"
 	var/last_gen = 0
 	change_icons = 0
 	can_off_process = 1
@@ -460,7 +509,7 @@
 	throwforce = 7
 	w_class = 2
 	materials = list(MAT_METAL=50)
-	origin_tech = "engineering=1"
+	origin_tech = "engineering=1;combat=1"
 	attack_verb = list("attacked", "bashed", "battered", "bludgeoned", "whacked")
 	toolspeed = 1
 
