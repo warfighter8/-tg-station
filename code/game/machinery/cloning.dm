@@ -26,7 +26,7 @@
 	var/efficiency
 
 	var/datum/mind/clonemind
-	var/grab_ghost_when = CLONER_FRESH_CLONE
+	var/grab_ghost_when = CLONER_MATURE_CLONE
 
 	var/obj/item/device/radio/radio
 	var/radio_key = /obj/item/device/encryptionkey/headset_med
@@ -73,7 +73,7 @@
 							/obj/item/stack/cable_coil = 2,
 							/obj/item/weapon/stock_parts/scanning_module = 2,
 							/obj/item/weapon/stock_parts/manipulator = 2,
-							/obj/item/weapon/stock_parts/console_screen = 1)
+							/obj/item/stack/sheet/glass = 1)
 
 //The return of data disks?? Just for transferring between genetics machine/cloning machine.
 //TO-DO: Make the genetics machine accept them.
@@ -214,6 +214,7 @@
 		if (occupant)
 			locked = FALSE
 			go_out()
+			connected_message("Clone Ejected: Loss of power.")
 
 	else if((occupant) && (occupant.loc == src))
 		if((occupant.stat == DEAD) || (occupant.suiciding) || occupant.hellbound)  //Autoeject corpses and suiciding dudes.
